@@ -79,3 +79,8 @@ Because Xcode's default compiler lacks the PE/COFF linker (`lld-link`), you must
 
 1. Copy the built bc250-unlock.efi to a FAT32 formatted USB stick at path `EFI/BOOT/BOOTX64.EFI`.
 2. Change the boot order in your BIOS to boot from the USB stick first.
+
+## Installation (NVME)
+
+1. Copy the built bc250-unlock.efi to /boot/EFI/BOOT/COREUNLOCK.EFI.
+2. Run `sudo efibootmgr --create --disk /dev/nvme0n1 --part 1 --label "CoreUnlock" --loader "\\EFI\\BOOT\\COREUNLOCK.EFI"`
