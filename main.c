@@ -106,15 +106,32 @@ void print_hex(EFI_SYSTEM_TABLE *SystemTable, unsigned int val) {
     print(SystemTable, buf);
 }
 
+void print_hex_byte(EFI_SYSTEM_TABLE *SystemTable, unsigned char val) {
+    UINT16 buf[5];
+    buf[0] = '0';
+    buf[1] = 'x';
+    for (int i = 1; i >= 0; i--) {
+        unsigned char digit = (val >> (i * 4)) & 0xF;
+        buf[3 - i] = (digit < 10) ? ('0' + digit) : ('A' + (digit - 10));
+    }
+    buf[4] = '\0';
+    print(SystemTable, buf);
+}
+
 EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
     // Read mask register
     unsigned int before = smn_rd(MASK_REG);
     unsigned char mask = before & 0xFF;
 
+#if TEST_MODE
+    print(SystemTable, L"BC-250 Core Unlocker EFI Utility\r\n");
+    print(SystemTable, L"Current Core Mask: ");
+    print_hex_byte(SystemTable, mask);
+    print(SystemTable, L"\r\n");
+#endif
+
     if (mask == 0xFF) {
 #if TEST_MODE
-        print(SystemTable, L"BC-250 Core Unlocker EFI Utility\r\n");
-        print(SystemTable, L"Current Core Mask: 0xFF\r\n");
         print(SystemTable, L"Cores already unlocked! (TEST_MODE active). Verification successful! Halting...\r\n");
         while (1) {
             __asm__ __volatile__("hlt");
@@ -122,11 +139,9 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
 #endif
         // Cores are unlocked. Return EFI_SUCCESS to allow UEFI Boot Manager to proceed natively to option #2 in BootOrder!
         return EFI_SUCCESS;
-    } else if (mask == 0x77) {
+    } else {
 #if TEST_MODE
-        print(SystemTable, L"BC-250 Core Unlocker EFI Utility\r\n");
-        print(SystemTable, L"Current Core Mask: 0x77\r\n");
-        print(SystemTable, L"Mask is 0x77. Sending SMU message to unlock cores...\r\n");
+        print(SystemTable, L"Sending SMU message to unlock cores...\r\n");
 #endif
         int st = send_msg(SystemTable, MSG_WRITE_FF, MASK_REG);
         if (st < 0) {
@@ -155,10 +170,5 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
         while (1) {
             __asm__ __volatile__("hlt");
         }
-    } else {
-        print(SystemTable, L"Error: Unexpected core mask! Aborting unlock to protect hardware.\r\n");
-        print(SystemTable, L"Halting in 5 seconds...\r\n");
-        SystemTable->BootServices->Stall(5000000);
-        return EFI_LOAD_ERROR;
     }
 }
