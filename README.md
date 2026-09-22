@@ -8,12 +8,13 @@ Credit to https://github.com/rw-r-r-0644/bc250-core-unlock for originally discov
 
 1. The EFI application starts before your primary bootloader.
 2. It queries the core presence mask at SMN `0x0115A870`.
-3. If the mask is not `0xFF` (cold boot default):
-   * It sends a message to the SMU via Queue 3 to write `0xFF` to the mask.
+3. If the mask is not `0xFF`:
+   * It unlocks SMU secure access and writes `0xFF` to the mask.
    * It triggers a **warm reboot**.
-4. If the mask is `0xFF` (cores already active after the warm reboot):
-   * It skips the patch and chainloads the real bootloader by exiting, deferring to the next boot option.
-5. The OS boots with all 8 cores active automatically.
+4. If the mask is `0xFF` (cores active):
+   * It unlocks SMU secure access and applies the SMU firmware patches.
+   * It exits and defers to the next boot option to boot the OS natively.
+5. The OS boots with all 8 cores active and SMU firmware patched automatically.
 
 ## Compilation
 

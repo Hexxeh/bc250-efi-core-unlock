@@ -1,3 +1,6 @@
 [submodule "yoppeh-efi"]
 	path = yoppeh-efi
 	url = https://github.com/yoppeh/efi.git
+[submodule "bc250-smu-unlock"]
+	path = bc250-smu-unlock
+	url = https://github.com/rw-r-r-0644/bc250-smu-unlock
